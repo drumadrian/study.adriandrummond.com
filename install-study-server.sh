@@ -83,7 +83,7 @@ echo "Configuring Nginx Reverse Proxy..."
 cat << 'EOF' > /etc/nginx/conf.d/study-server.conf
 server {
     listen 80;
-    server_name study.adriandrummond.com;
+    server_name study.adriandrummond.com wiki.adriandrummond.com;
 
     access_log /var/log/nginx/study.adriandrummond.com-access.log main;
     error_log /var/log/nginx/study.adriandrummond.com-error.log;
@@ -103,6 +103,17 @@ server {
 EOF
 systemctl enable --now nginx
 systemctl restart nginx
+
+# --- Firewall & Local DNS Routing ---
+echo "Configuring Firewall and Local DNS Routing..."
+if systemctl is-active --quiet firewalld; then
+    firewall-cmd --permanent --add-service=http
+    firewall-cmd --permanent --add-service=https
+    firewall-cmd --reload
+fi
+if ! grep -q "127.0.0.1 $DOMAIN_NAME" /etc/hosts; then
+    echo "127.0.0.1 $DOMAIN_NAME wiki.adriandrummond.com" >> /etc/hosts
+fi
 
 # --- 7. Desktop UI & Google Antigravity IDE ---
 dnf groupinstall -y "Server with GUI" || dnf install -y @gnome-desktop
